@@ -2,5 +2,5 @@
 
 source 'https://rubygems.org'
 
-gem 'obs_deploy', '0.2.2'
 gem 'mina'
+gem 'obs_deploy', '0.2.2'

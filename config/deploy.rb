@@ -6,24 +6,16 @@ require 'shellwords'
 require 'bundler/setup'
 require 'obs_deploy'
 
-# Basic settings:
-#   domain       - The hostname to SSH to.
-#   deploy_to    - Path to deploy into.
-#   repository   - Git repo to clone from. (needed by mina/git)
-#   branch       - Branch name to deploy. (needed by mina/git)
+class PendingMigrationError < StandardError; end
 
 set :domain, ENV['DOMAIN'] || 'obs'
 # if we don't unset it, it will use the default:
 # https://github.com/mina-deploy/mina/blob/master/lib/mina/backend/remote.rb#L28
-set :port, nil
-set :package_name, 'obs-api'
+set :port, ENV['SSH_PORT'] || nil
+set :package_name, ENV['PACKAGE_NAME'] || 'obs-api'
 set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
 
 set :user, ENV['user'] || 'root'
-# Optional settings:
-#   set :user, 'foobar'          # Username in the server to SSH to.
-#   set :port, '30000'           # SSH port number.
-#   set :forward_agent, true     # SSH forward_agent.
 set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product))
 
 # Let mina controls the dry-run
@@ -33,8 +25,10 @@ namespace :obs do
   namespace :migration do
     desc 'migration needed'
     task :check do
-      run(:local) do 
-        puts "Pending Migration? #{fetch(:check_diff).has_migration?}" 
+      run(:local) do
+        if fetch(:check_diff).has_migration?
+          raise ::PendingMigrationError, 'pending migration'
+        end
       end
     end
     desc 'show pending migrations'
@@ -104,7 +98,12 @@ namespace :zypper do
   end
 end
 
-desc 'Deploys the current version to the server.'
-task :deploy do
+desc 'Deploys without pending migrations'
+task deploy: 'obs:migration:check' do
   invoke 'zypper:update'
+end
+
+desc 'Deploy with pending migration'
+task deploy_with_migration: 'obs:migration:check' do
+  # we have to run the deployment just if we catch the PendingMigrationError
 end
