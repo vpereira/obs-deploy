@@ -45,6 +45,13 @@ namespace :obs do
     end
   end
 
+  desc 'get diff'
+  task :diff do
+    run(:local) do
+      puts "Diff: #{fetch(:check_diff).github_diff}"
+    end
+  end
+
   namespace :package do
     desc 'check installed version'
     task :installed do
