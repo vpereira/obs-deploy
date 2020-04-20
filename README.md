@@ -29,3 +29,8 @@ Passing environment variables:
 ```$ bundle install ```
 
 ```$ mina -T```
+
+
+=== How to contribute with code
+
+The commands are implemented in the gem [obs_deploy](https://github.com/vpereira/obs_deploy)
