@@ -14,12 +14,15 @@ set :domain, ENV['DOMAIN'] || 'obs'
 set :port, ENV['SSH_PORT'] || nil
 set :package_name, ENV['PACKAGE_NAME'] || 'obs-api'
 set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
+set :deploy_to, ENV['DEPLOY_TO_DIR'] || '/srv/www/obs/api/'
 
 set :user, ENV['user'] || 'root'
 set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product))
 
 # Let mina controls the dry-run
 set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: false)
+set :apache_sysconfig, ObsDeploy::ApacheSysconfig.new
+set :systemctl, ObsDeploy::Systemctl.new
 
 namespace :obs do
   namespace :migration do
@@ -66,13 +69,13 @@ namespace :systemd do
   desc 'obs-api list systemctl dependencies'
   task :list_dependencies do
     run(:remote) do
-      command Shellwords.join(ObsDeploy::Systemctl.new.list_dependencies)
+      command Shellwords.join(fetch(:systemctl).list_dependencies)
     end
   end
   desc 'obs-api status'
   task :status do
     run(:remote) do
-      command Shellwords.join(ObsDeploy::Systemctl.new.status)
+      command Shellwords.join(fetch(:systemctl).status)
     end
   end
 end
@@ -101,9 +104,22 @@ end
 desc 'Deploys without pending migrations'
 task deploy: 'obs:migration:check' do
   invoke 'zypper:update'
+  invoke 'obs:package:installed'
 end
 
 desc 'Deploy with pending migration'
-task deploy_with_migration: 'obs:migration:check' do
-  # we have to run the deployment just if we catch the PendingMigrationError
+task deploy_with_migration do
+  begin
+    invoke 'obs:migration:check'
+  rescue PendingMigrationError
+    invoke 'zypper:update'
+    apache_sysconfig = fetch(:apache_sysconfig)
+    command Shellwords.join(apache_sysconfig.enable_maintenance_mode)
+    command Shellwords.join(fetch(:systemctl).restart_apache)
+    command 'run_in_api rails db:migrate:with_data'
+    command Shellwords.join(apache_sysconfig.disable_maintenance_mode)
+    command Shellwords.join(fetch(:systemctl).restart_apache)
+    # basic test
+    invoke 'obs:package:installed'
+  end
 end
