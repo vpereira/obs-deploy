@@ -96,7 +96,7 @@ namespace :zypper do
   task :refresh do
     command Shellwords.join(fetch(:zypper).refresh)
   end
-  task update: :refresh do
+  task :update => :refresh do
     command Shellwords.join(fetch(:zypper).update)
   end
 end
@@ -108,7 +108,7 @@ task deploy: 'obs:migration:check' do
 end
 
 desc 'Deploy with pending migration'
-task deploy_with_migration do
+task :deploy_with_migration do
   begin
     invoke 'obs:migration:check'
   rescue PendingMigrationError
