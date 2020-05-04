@@ -13,7 +13,7 @@ GEM
     mini_portile2 (2.4.0)
     nokogiri (1.10.9)
       mini_portile2 (~> 2.4.0)
-    obs_deploy (0.2.3)
+    obs_deploy (0.2.4)
       cheetah
       dry-cli
       nokogiri
