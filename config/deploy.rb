@@ -16,7 +16,7 @@ set :package_name, ENV['PACKAGE_NAME'] || 'obs-api'
 set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
 set :deploy_to, ENV['DEPLOY_TO_DIR'] || '/srv/www/obs/api/'
 
-set :user, ENV['user'] || 'root'
+set :user, ENV['obs_user'] || 'root'
 set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product))
 
 # Let mina controls the dry-run
@@ -24,14 +24,29 @@ set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: 
 set :apache_sysconfig, ObsDeploy::ApacheSysconfig.new
 set :systemctl, ObsDeploy::Systemctl.new
 
-namespace :obs do
+# tasks without description shouldn't be called in the CLI
+namespace :dependencies do
   namespace :migration do
-    desc 'migration needed'
     task :check do
       run(:local) do
         if fetch(:check_diff).has_migration?
           raise ::PendingMigrationError, 'pending migration'
         end
+      end
+    end
+  end
+end
+
+namespace :obs do
+  namespace :migration do
+    desc 'migration needed'
+    task :check do
+      begin
+        invoke 'dependencies:migration:check'
+        puts 'No pending migration'
+      rescue ::PendingMigrationError
+        puts 'Pending migrations:'
+        invoke :show
       end
     end
     desc 'show pending migrations'
@@ -56,6 +71,7 @@ namespace :obs do
         puts "Running Version: #{fetch(:check_diff).obs_running_commit}"
       end
     end
+
     desc 'check available version'
     task :available do
       run(:local) do
@@ -96,13 +112,13 @@ namespace :zypper do
   task :refresh do
     command Shellwords.join(fetch(:zypper).refresh)
   end
-  task :update => :refresh do
+  task update: :refresh do
     command Shellwords.join(fetch(:zypper).update)
   end
 end
 
 desc 'Deploys without pending migrations'
-task deploy: 'obs:migration:check' do
+task deploy: 'dependencies:migration:check' do
   invoke 'zypper:update'
   invoke 'obs:package:installed'
 end
@@ -110,12 +126,13 @@ end
 desc 'Deploy with pending migration'
 task :deploy_with_migration do
   begin
-    invoke 'obs:migration:check'
+    invoke 'dependencies:migration:check'
   rescue PendingMigrationError
     invoke 'zypper:update'
     apache_sysconfig = fetch(:apache_sysconfig)
     command Shellwords.join(apache_sysconfig.enable_maintenance_mode)
     command Shellwords.join(fetch(:systemctl).restart_apache)
+    command 'run_in_api rails db:migrate'
     command 'run_in_api rails db:migrate:with_data'
     command Shellwords.join(apache_sysconfig.disable_maintenance_mode)
     command Shellwords.join(fetch(:systemctl).restart_apache)
