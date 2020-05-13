@@ -75,7 +75,7 @@ namespace :obs do
     desc 'check available version'
     task :available do
       run(:local) do
-        puts "Running Version: #{fetch(:check_diff).package_version}"
+        puts "Available Version: #{fetch(:check_diff).package_version}"
       end
     end
   end
