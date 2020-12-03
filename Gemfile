@@ -3,4 +3,4 @@
 source 'https://rubygems.org'
 
 gem 'mina'
-gem 'obs_deploy'
+gem 'obs_deploy', git: 'https://github.com/vpereira/obs_deploy.git'

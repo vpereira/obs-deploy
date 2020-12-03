@@ -1,22 +1,27 @@
+GIT
+  remote: https://github.com/vpereira/obs_deploy.git
+  revision: 27c15602f06505409344facc78bef5c6f02a6736
+  specs:
+    obs_deploy (0.2.5)
+      cheetah
+      dry-cli
+      nokogiri
+
 GEM
   remote: https://rubygems.org/
   specs:
     abstract_method (1.2.1)
     cheetah (0.5.2)
       abstract_method (~> 1.2)
-    concurrent-ruby (1.1.6)
+    concurrent-ruby (1.1.7)
     dry-cli (0.6.0)
       concurrent-ruby (~> 1.0)
     mina (1.2.3)
       open4 (~> 1.3.4)
       rake
     mini_portile2 (2.4.0)
-    nokogiri (1.10.9)
+    nokogiri (1.10.10)
       mini_portile2 (~> 2.4.0)
-    obs_deploy (0.2.5)
-      cheetah
-      dry-cli
-      nokogiri
     open4 (1.3.4)
     rake (13.0.1)
 
@@ -25,7 +30,7 @@ PLATFORMS
 
 DEPENDENCIES
   mina
-  obs_deploy
+  obs_deploy!
 
 BUNDLED WITH
    2.1.4
