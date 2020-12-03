@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'mina/rails'
 require 'shellwords'
-
 require 'bundler/setup'
+require 'mina/rails'
+
 require 'obs_deploy'
 
 class PendingMigrationError < StandardError; end
