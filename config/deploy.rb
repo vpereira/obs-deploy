@@ -120,7 +120,7 @@ end
 desc 'Deploys without pending migrations'
 task deploy: 'dependencies:migration:check' do
   invoke 'zypper:update'
-  invoke 'obs:package:installed'
+  # invoke 'obs:package:installed'
 end
 
 desc 'Deploy with pending migration'
