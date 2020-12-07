@@ -30,9 +30,7 @@ namespace :dependencies do
   namespace :migration do
     task :check do
       run(:local) do
-        if fetch(:check_diff).has_migration?
-          raise ::PendingMigrationError, 'pending migration'
-        end
+        raise ::PendingMigrationError, 'pending migration' if fetch(:check_diff).has_migration?
       end
     end
   end
