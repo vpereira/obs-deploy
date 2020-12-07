@@ -2,7 +2,8 @@
 
 require 'shellwords'
 require 'bundler/setup'
-require 'mina/rails'
+# require 'mina/rails'
+require 'mina/deploy'
 
 require 'obs_deploy'
 
